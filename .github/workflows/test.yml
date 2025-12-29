@@ -1,0 +1,28 @@
+name: "华为推送测试"
+
+on:
+  workflow_dispatch: # 允许手动点击运行
+
+jobs:
+  test_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run Push Test
+        env:
+          # 把 Secrets 注入到环境变量，让脚本读取
+          HUAWEI_APP_ID: ${{ secrets.HUAWEI_APP_ID }}
+          HUAWEI_APP_SECRET: ${{ secrets.HUAWEI_APP_SECRET }}
+          HUAWEI_DEVICE_TOKEN: ${{ secrets.HUAWEI_DEVICE_TOKEN }}
+          TZ: Asia/Shanghai
+        run: python test_push.py
