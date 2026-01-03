@@ -1,0 +1,48 @@
+name: Benchmark (Geekbench 6.5 + Fusion Monster)
+
+on:
+  workflow_dispatch: # 允许手动点击按钮触发
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    # 设置超时时间，防止脚本卡死（融合怪测速可能会花一些时间）
+    timeout-minutes: 60
+    
+    steps:
+      - name: Check System Info (查看机器基础配置)
+        run: |
+          echo "=== CPU Info ==="
+          lscpu
+          echo "=== Memory Info ==="
+          free -h
+          echo "=== Disk Info ==="
+          df -h
+
+      - name: Run Geekbench 6.5.0 (CPU 跑分)
+        run: |
+          echo "Downloading Geekbench 6.5.0..."
+          wget -q https://cdn.geekbench.com/Geekbench-6.5.0-Linux.tar.gz
+          
+          echo "Extracting..."
+          tar -zxvf Geekbench-6.5.0-Linux.tar.gz
+          
+          echo "Running Benchmark..."
+          cd Geekbench-6.5.0-Linux
+          # 运行并等待结果链接生成
+          ./geekbench6
+
+      - name: Run Fusion Monster (融合怪 - 网络与综合测试)
+        # 即使上面的 Geekbench 失败或出错，也继续运行这一步
+        if: always()
+        continue-on-error: true
+        run: |
+          echo "Downloading Spiritlhl ECS Script (Fusion Monster)..."
+          # 使用官方推荐的 GitHub 源下载
+          wget -qO ecs.sh https://github.com/spiritLHLS/ecs/raw/main/ecs.sh
+          chmod +x ecs.sh
+          
+          echo "Running Script in Non-Interactive Mode (-m 1)..."
+          # -m 1 是融合怪的无交互模式，适合在 Action 中跑
+          # 包含了系统信息、硬盘读写、以及流媒体解锁和三网测速
+          sudo bash ecs.sh -m 1
